@@ -1,17 +1,31 @@
 const express = require('express');
+const mongoose = require("mongoose");
+const dotenv = require("dotenv");
+const cors = require("cors");
+const authRoutes = require("./auth/authRoutes"); // ✅ Importa las rutas
 const axios = require('axios');
-const cors = require('cors');
-const app = express();
-const port = 3000;
 const iconv = require('iconv-lite');
+const connectDB = require('./db');
+
+dotenv.config(); // ✅ Cargar variables de entorno
+connectDB(); // ✅ Conectar a MongoDB
+
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// ✅ Middleware
 app.use(cors());
+app.use(express.json()); // ✅ Debe ir antes de las rutas
 
-const AEMET_API_KEY = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ4anJhcHhAZ21haWwuY29tIiwianRpIjoiMTcxNjEyOGItM2NkMS00YjlhLWI5NjktZDQzODMxYjg5YjQ2IiwiaXNzIjoiQUVNRVQiLCJpYXQiOjE2NzU2MDEzMDMsInVzZXJJZCI6IjE3MTYxMjhiLTNjZDEtNGI5YS1iOTY5LWQ0MzgzMWI4OWI0NiIsInJvbGUiOiIifQ.k0x9qYjWEc0gGqrPj1oCeWY3DgiQRxBwrKw0pHTtbpk';
+// ✅ Cargar rutas de autenticación
+app.use("/api/auth", authRoutes); // ✅ Solo una vez
+
+// ✅ Configuración de AEMET
+const AEMET_API_KEY = process.env.AEMET_API_KEY;
 const MUNICIPIOS_URL = `https://opendata.aemet.es/opendata/api/maestro/municipios?api_key=${AEMET_API_KEY}`;
-
 let municipiosCache = [];
 
-// 📌 Función para obtener municipios desde AEMET con provincia
+// 📌 Función para obtener municipios desde AEMET
 const fetchMunicipios = async () => {
   try {
     console.log('📡 Obteniendo municipios desde AEMET...');
@@ -23,66 +37,22 @@ const fetchMunicipios = async () => {
     // 📌 Convertir a JSON asegurando UTF-8
     const municipiosJson = JSON.parse(iconv.decode(municipiosData.data, 'win1252'));
 
-    // 📌 Mapeo de códigos de provincia a nombres de provincia
     const provincias = {
-      '01': 'Álava',
-      '02': 'Albacete',
-      '03': 'Alicante',
-      '04': 'Almería',
-      '05': 'Ávila',
-      '06': 'Badajoz',
-      '07': 'Islas Baleares',
-      '08': 'Barcelona',
-      '09': 'Burgos',
-      '10': 'Cáceres',
-      '11': 'Cádiz',
-      '12': 'Castellón',
-      '13': 'Ciudad Real',
-      '14': 'Córdoba',
-      '15': 'A Coruña',
-      '16': 'Cuenca',
-      '17': 'Girona',
-      '18': 'Granada',
-      '19': 'Guadalajara',
-      '20': 'Guipúzcoa',
-      '21': 'Huelva',
-      '22': 'Huesca',
-      '23': 'Jaén',
-      '24': 'León',
-      '25': 'Lleida',
-      '26': 'La Rioja',
-      '27': 'Lugo',
-      '28': 'Madrid',
-      '29': 'Málaga',
-      '30': 'Murcia',
-      '31': 'Navarra',
-      '32': 'Ourense',
-      '33': 'Asturias',
-      '34': 'Palencia',
-      '35': 'Las Palmas',
-      '36': 'Pontevedra',
-      '37': 'Salamanca',
-      '38': 'Santa Cruz de Tenerife',
-      '39': 'Cantabria',
-      '40': 'Segovia',
-      '41': 'Sevilla',
-      '42': 'Soria',
-      '43': 'Tarragona',
-      '44': 'Teruel',
-      '45': 'Toledo',
-      '46': 'Valencia',
-      '47': 'Valladolid',
-      '48': 'Vizcaya',
-      '49': 'Zamora',
-      '50': 'Zaragoza',
-      '51': 'Ceuta',
-      '52': 'Melilla'
+      '01': 'Álava', '02': 'Albacete', '03': 'Alicante', '04': 'Almería', '05': 'Ávila',
+      '06': 'Badajoz', '07': 'Islas Baleares', '08': 'Barcelona', '09': 'Burgos', '10': 'Cáceres',
+      '11': 'Cádiz', '12': 'Castellón', '13': 'Ciudad Real', '14': 'Córdoba', '15': 'A Coruña',
+      '16': 'Cuenca', '17': 'Girona', '18': 'Granada', '19': 'Guadalajara', '20': 'Guipúzcoa',
+      '21': 'Huelva', '22': 'Huesca', '23': 'Jaén', '24': 'León', '25': 'Lleida', '26': 'La Rioja',
+      '27': 'Lugo', '28': 'Madrid', '29': 'Málaga', '30': 'Murcia', '31': 'Navarra', '32': 'Ourense',
+      '33': 'Asturias', '34': 'Palencia', '35': 'Las Palmas', '36': 'Pontevedra', '37': 'Salamanca',
+      '38': 'Santa Cruz de Tenerife', '39': 'Cantabria', '40': 'Segovia', '41': 'Sevilla', '42': 'Soria',
+      '43': 'Tarragona', '44': 'Teruel', '45': 'Toledo', '46': 'Valencia', '47': 'Valladolid', '48': 'Vizcaya',
+      '49': 'Zamora', '50': 'Zaragoza', '51': 'Ceuta', '52': 'Melilla'
     };
 
-    // 📌 Transformar los datos y asignar la provincia
     municipiosCache = municipiosJson.map((municipio) => {
-      const codigoProvincia = municipio.id.substring(2, 4); // Extrae el código de provincia del ID
-      const provincia = provincias[codigoProvincia] || 'Provincia desconocida'; // Asigna la provincia
+      const codigoProvincia = municipio.id.substring(2, 4);
+      const provincia = provincias[codigoProvincia] || 'Provincia desconocida';
 
       return {
         codigo: municipio.id,
@@ -124,9 +94,7 @@ app.get('/api/weather/:municipio', async (req, res) => {
       transformResponse: [(data) => data]
     });
 
-    // 📌 Convertir a JSON y asegurar UTF-8
     const weatherData = JSON.parse(Buffer.from(datosResponse.data, 'utf-8').toString());
-
     console.log('✔ Pronóstico obtenido correctamente.');
     res.json(weatherData);
   } catch (error) {
@@ -136,7 +104,7 @@ app.get('/api/weather/:municipio', async (req, res) => {
 });
 
 // 📌 Iniciar el servidor y cargar municipios
-app.listen(port, async () => {
-  console.log(`🟢 Servidor backend corriendo en http://localhost:${port}`);
+app.listen(PORT, async () => {
+  console.log(`🟢 Servidor backend corriendo en http://localhost:${PORT}`);
   await fetchMunicipios();
 });
