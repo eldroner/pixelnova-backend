@@ -3,7 +3,8 @@ const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const path = require("path");
-const authRoutes = require("./auth/authRoutes"); // ✅ Importa las rutas
+const authRoutes = require("./auth/authRoutes"); // ✅ Importa las rutas de autenticación
+const memorialRoutes = require("./routes/memorialRoutes"); // ✅ Nueva ruta de memorials
 const axios = require('axios');
 const iconv = require('iconv-lite');
 const connectDB = require('./db');
@@ -11,9 +12,8 @@ const connectDB = require('./db');
 dotenv.config(); // ✅ Cargar variables de entorno
 connectDB(); // ✅ Conectar a MongoDB
 
-const app = express(); // ✅ Se declara antes de su uso
+const app = express(); // ✅ Ahora la app está declarada antes de usar app.use()
 const PORT = process.env.PORT || 5000;
-
 
 // ✅ Middleware
 app.use(cors());
@@ -25,6 +25,9 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // ✅ Cargar rutas de autenticación
 app.use("/api/auth", authRoutes);
+
+// ✅ Cargar rutas de memorials (ahora después de definir `app`)
+app.use("/api/memorials", memorialRoutes); 
 
 // ✅ Configuración de AEMET
 const AEMET_API_KEY = process.env.AEMET_API_KEY;

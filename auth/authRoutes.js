@@ -37,12 +37,12 @@ const upload = multer({
 router.post("/register", upload.single("photo"), register);
 router.post("/login", login);
 
-// ==================================================
-// 🔹 Rutas de Memorial (Antes estaban en memorialRoutes.js)
-// ==================================================
+// =====================
+// 🔹 Rutas de Memorial
+// =====================
 
 // ✅ Crear un memorial (requiere autenticación)
-router.post("/memorials/create", authMiddleware, async (req, res) => {
+router.post("/api/memorials/create", authMiddleware, async (req, res) => {
     try {
         const { name, description, ownerId, videoUrl, privateContent } = req.body;
 
