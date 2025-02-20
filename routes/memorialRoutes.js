@@ -45,6 +45,23 @@ router.get("/my-memorials", authMiddleware, async (req, res) => {
     }
 });
 
+// 📌 Obtener un memorial por su ID
+router.get("/memorial/:id", async (req, res) => {
+    try {
+        const memorial = await Memorial.findById(req.params.id);
+
+        if (!memorial) {
+            return res.status(404).json({ msg: "Memorial no encontrado" });
+        }
+
+        res.status(200).json(memorial);
+    } catch (error) {
+        console.error("❌ Error al obtener el memorial:", error);
+        res.status(500).json({ msg: "Error en el servidor" });
+    }
+});
+
+
 // 📌 Obtener todos los memoriales (sin autenticación)
 router.get("/", async (req, res) => {
     try {
