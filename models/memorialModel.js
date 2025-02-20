@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 
 const MemorialSchema = new mongoose.Schema({
+  owner: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // 🟢 Asegurar que cada memorial tenga un dueño
   name: { type: String, required: true },
   description: { type: String },
   birthDate: { type: Date },
