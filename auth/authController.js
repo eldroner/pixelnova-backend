@@ -61,7 +61,7 @@ const login = async (req, res) => {
         if (!isMatch) return res.status(400).json({ msg: "Credenciales incorrectas" });
 
         const payload = { user: { id: user.id } };
-        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
+        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "7d" });
 
         // ✅ Evita duplicar la URL de la foto
         const photoUrl = user.photo

@@ -5,6 +5,58 @@ const User = require("../models/userModel"); // ✅ Importamos el modelo de usua
 
 const router = express.Router();
 
+router.get("/my-memorials", authMiddleware, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const memorials = await Memorial.find({ owner: userId });
+
+        res.status(200).json(memorials);
+    } catch (error) {
+        console.error("❌ Error al obtener memoriales:", error);
+        res.status(500).json({ msg: "Error en el servidor" });
+    }
+});
+
+// Modificar el memorial
+
+router.put("/:id", authMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updatedMemorial = req.body;
+
+        const memorial = await Memorial.findByIdAndUpdate(id, updatedMemorial, { new: true });
+
+        if (!memorial) {
+            return res.status(404).json({ msg: "Memorial no encontrado." });
+        }
+
+        res.json({ msg: "Memorial actualizado con éxito", memorial });
+    } catch (error) {
+        console.error("❌ Error al actualizar memorial:", error);
+        res.status(500).json({ msg: "Error en el servidor" });
+    }
+});
+
+
+// 📌 Obtener un memorial por su ID
+router.get("/:id", async (req, res) => {
+    try {
+        const memorial = await Memorial.findById(req.params.id);
+
+        if (!memorial) {
+            return res.status(404).json({ msg: "Memorial no encontrado" });
+        }
+
+        res.status(200).json(memorial);
+    } catch (error) {
+        console.error("❌ Error al obtener el memorial:", error);
+        res.status(500).json({ msg: "Error en el servidor" });
+    }
+});
+
+
+
+
 // 📌 Crear un memorial y asignarlo al usuario creador
 router.post("/create", authMiddleware, async (req, res) => {
     try {
