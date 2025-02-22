@@ -7,7 +7,9 @@ const router = express.Router();
 // 📌 Crear un memorial
 router.post("/create", authMiddleware, async (req, res) => {
     try {
-        const { name, description, videoUrl, privateContent } = req.body;
+        console.log("📥 Datos recibidos en el backend:", req.body); // 🟢 Verifica qué datos llegan al backend
+
+        const { name, description, birthDate, deathDate, videoUrl, privateContent } = req.body;  // 🟢 AÑADIDO birthDate y deathDate
 
         if (!name) {
             return res.status(400).json({ msg: "El nombre es obligatorio" });
@@ -16,19 +18,23 @@ router.post("/create", authMiddleware, async (req, res) => {
         const memorial = new Memorial({
             name,
             description,
-            owner: req.user.id, // 🟢 Asegurar que el propietario se guarda correctamente
+            birthDate: birthDate ? new Date(birthDate) : null,  // 🟢 Convertir a Date
+            deathDate: deathDate ? new Date(deathDate) : null,  // 🟢 Convertir a Date
+            owner: req.user.id,
             videoUrl,
             privateContent,
             allowedUsers: [],
         });
 
         await memorial.save();
-        res.status(201).json({ msg: "Memorial creado exitosamente", memorial });
+        res.status(201).json({ msg: "✅ Memorial creado exitosamente", memorial });
     } catch (error) {
         console.error("❌ Error al crear memorial:", error);
         res.status(500).json({ msg: "Error en el servidor" });
     }
 });
+
+
 
 // 📌 Obtener memoriales del usuario autenticado
 router.get("/my-memorials", authMiddleware, async (req, res) => {
@@ -61,7 +67,6 @@ router.get("/memorial/:id", async (req, res) => {
     }
 });
 
-
 // 📌 Obtener todos los memoriales (sin autenticación)
 router.get("/", async (req, res) => {
     try {
@@ -73,5 +78,24 @@ router.get("/", async (req, res) => {
     }
 });
 
+// 📌 Actualizar un memorial (requiere autenticación)
+router.put("/:id", authMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updatedMemorial = req.body;
+
+        // Verificar si el memorial existe
+        const memorial = await Memorial.findByIdAndUpdate(id, updatedMemorial, { new: true });
+
+        if (!memorial) {
+            return res.status(404).json({ msg: "Memorial no encontrado." });
+        }
+
+        res.json({ msg: "Memorial actualizado con éxito", memorial });
+    } catch (error) {
+        console.error("❌ Error al actualizar memorial:", error);
+        res.status(500).json({ msg: "Error en el servidor" });
+    }
+});
 
 module.exports = router;
