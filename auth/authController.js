@@ -1,4 +1,4 @@
-const User = require("../models/userModel");
+const User = require("../models/userModel"); 
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const fs = require("fs");
@@ -6,7 +6,7 @@ const path = require("path");
 require("dotenv").config();
 
 // ✅ Asegurar que la carpeta de uploads existe
-const UPLOADS_DIR = path.join(__dirname, "../uploads"); // Ajustado para evitar problemas de ruta
+const UPLOADS_DIR = path.join(__dirname, "../uploads");
 if (!fs.existsSync(UPLOADS_DIR)) {
     fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 }
@@ -15,10 +15,9 @@ if (!fs.existsSync(UPLOADS_DIR)) {
 const register = async (req, res) => {
     console.log("🟢 Registro de usuario iniciado...");
     console.log("📥 Datos recibidos:", req.body);
-    console.log("📸 Archivo recibido:", req.file?.filename || "Sin foto");
 
-    const { name, email, phone, password } = req.body;
-    const photo = req.file ? req.file.filename : null; // Guardamos solo el nombre del archivo
+    const { name, email, phone, password, photo } = req.body; // 🔹 Se añade `photo` desde el body
+    let photoFilename = null; // 🔹 Variable para almacenar la foto procesada
 
     try {
         let user = await User.findOne({ email });
@@ -29,7 +28,29 @@ const register = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        user = new User({ name, email, phone, password: hashedPassword, photo });
+        // ✅ Verificar si la foto es Base64 o un archivo adjunto
+        if (photo && photo.startsWith("data:image")) {
+            console.log("📸 Recibida imagen en formato Base64");
+
+            const base64Data = photo.replace(/^data:image\/\w+;base64,/, ""); // Elimina el prefijo Base64
+            photoFilename = `user_${Date.now()}.png`; // Genera un nombre único
+            const imagePath = path.join(UPLOADS_DIR, photoFilename); 
+
+            fs.writeFileSync(imagePath, base64Data, "base64"); // Guarda la imagen como archivo
+        } else if (req.file) {
+            console.log("📸 Recibido archivo de imagen");
+            photoFilename = req.file.filename; // Si se sube un archivo, usamos ese
+        }
+
+        // ✅ Crear usuario con la foto procesada
+        user = new User({ 
+            name, 
+            email, 
+            phone, 
+            password: hashedPassword, 
+            photo: photoFilename // Guarda solo el nombre del archivo
+        });
+
         await user.save();
 
         console.log("✅ Usuario registrado correctamente en MongoDB");
@@ -40,7 +61,7 @@ const register = async (req, res) => {
                 name: user.name,
                 email: user.email,
                 phone: user.phone,
-                photo: photo ? `http://localhost:5000/uploads/${photo}` : null
+                photo: photoFilename ? `http://localhost:5000/uploads/${photoFilename}` : null
             }
         });
     } catch (error) {
@@ -65,9 +86,7 @@ const login = async (req, res) => {
 
         // ✅ Evita duplicar la URL de la foto
         const photoUrl = user.photo
-            ? user.photo.startsWith("http")
-                ? user.photo // Si ya es una URL, la dejamos así
-                : `http://localhost:5000/uploads/${user.photo}` // Si no, la construimos correctamente
+            ? `http://localhost:5000/uploads/${user.photo}` 
             : null;
 
         console.log(`🟢 Usuario ${user.email} ha iniciado sesión. Foto: ${photoUrl}`);
