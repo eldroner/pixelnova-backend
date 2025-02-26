@@ -1,9 +1,10 @@
 const express = require("express");
-const { register, login } = require("./authController");
+const { register, login, updateUserProfile } = require("./authController");
 const multer = require("multer");
 const path = require("path");
 const authMiddleware = require("../middleware/authMiddleware"); // 🔐 Protección de rutas
 const Memorial = require("../models/memorialModel"); // Modelo de Memorial
+const User = require("../models/userModel");
 
 const router = express.Router();
 
@@ -13,13 +14,13 @@ const storage = multer.diskStorage({
         cb(null, "uploads/"); // Guardamos en la carpeta uploads
     },
     filename: (req, file, cb) => {
-        cb(null, Date.now() + path.extname(file.originalname)); // Renombramos con fecha
+        cb(null, `user_${Date.now()}${path.extname(file.originalname)}`); // Renombramos con fecha
     },
 });
 
 const upload = multer({
     storage,
-    limits: { fileSize: 2 * 1024 * 1024 }, // ✅ Límite de 2MB
+    limits: { fileSize: 3 * 1024 * 1024 }, // 🔹 Ahora el límite es de 3MB en lugar de 2MB
     fileFilter: (req, file, cb) => {
         const fileTypes = /jpeg|jpg|png/;
         const extName = fileTypes.test(path.extname(file.originalname).toLowerCase());
@@ -32,6 +33,7 @@ const upload = multer({
         }
     }
 });
+
 
 // ✅ Rutas de autenticación
 router.post("/register", upload.single("photo"), register);
@@ -103,6 +105,67 @@ router.get("/memorials/my-memorials", authMiddleware, async (req, res) => {
         res.status(200).json(memorials);
     } catch (error) {
         console.error("❌ Error al obtener memoriales:", error);
+        res.status(500).json({ msg: "Error en el servidor" });
+    }
+});
+
+// ✅ Obtener el perfil del usuario (requiere autenticación)
+router.get("/user/profile", authMiddleware, async (req, res) => {
+
+    try {
+        const userId = req.user.id;
+        const user = await User.findById(userId).select("-password");
+
+        if (!user) {
+            return res.status(404).json({ msg: "Usuario no encontrado" });
+        }
+
+        res.status(200).json({
+            ...user.toObject(),
+            photo: user.photo ? `http://localhost:5000/uploads/${user.photo}` : null
+        });
+    } catch (error) {
+        console.error("❌ Error al obtener el perfil del usuario:", error);
+        res.status(500).json({ msg: "Error en el servidor" });
+    }
+});
+
+console.log("📢 Registrando rutas en authRoutes.js...");
+
+// ✅ Ruta para actualizar el perfil del usuario con imagen
+router.put("/user/profile", authMiddleware, upload.single("photo"), async (req, res) => {
+
+    try {
+        const userId = req.user.id;
+        const { name, email, phone } = req.body;
+
+        let user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ msg: "Usuario no encontrado" });
+        }
+
+        user.name = name || user.name;
+        user.email = email || user.email;
+        user.phone = phone || user.phone;
+
+        if (req.file) {
+            user.photo = req.file.filename;
+        }
+
+        await user.save();
+
+        res.json({
+            msg: "Perfil actualizado correctamente",
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                phone: user.phone,
+                photo: user.photo ? `http://localhost:5000/uploads/${user.photo}` : null
+            }
+        });
+    } catch (error) {
+        console.error("❌ Error actualizando perfil:", error);
         res.status(500).json({ msg: "Error en el servidor" });
     }
 });

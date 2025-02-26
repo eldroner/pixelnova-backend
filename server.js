@@ -1,4 +1,5 @@
 const express = require('express');
+const User = require("./models/userModel");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const cors = require("cors");
@@ -8,6 +9,7 @@ const memorialRoutes = require("./routes/memorialRoutes"); // ✅ Nueva ruta de 
 const axios = require('axios');
 const iconv = require('iconv-lite');
 const connectDB = require('./db');
+const authMiddleware = require("./middleware/authMiddleware"); // ✅ Importa el middleware de autenticación
 
 dotenv.config(); // ✅ Cargar variables de entorno
 connectDB(); // ✅ Conectar a MongoDB
@@ -25,6 +27,8 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // ✅ Cargar rutas de autenticación
 app.use("/api/auth", authRoutes);
+
+
 
 // ✅ Cargar rutas de memorials (ahora después de definir `app`)
 app.use("/api/memorials", memorialRoutes); 

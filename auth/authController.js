@@ -70,6 +70,46 @@ const register = async (req, res) => {
     }
 };
 
+const updateUserProfile = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { name, email, phone } = req.body;
+
+        let user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ msg: "Usuario no encontrado" });
+        }
+
+        // Actualizar datos básicos
+        user.name = name || user.name;
+        user.email = email || user.email;
+        user.phone = phone || user.phone;
+
+        // Si se subió una nueva imagen, actualizarla
+        if (req.file) {
+            user.photo = req.file.filename;
+        }
+
+        await user.save();
+
+        res.json({
+            msg: "Perfil actualizado correctamente",
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                phone: user.phone,
+                photo: user.photo ? `http://localhost:5000/uploads/${user.photo}` : null
+            }
+        });
+    } catch (error) {
+        console.error("❌ Error actualizando perfil:", error);
+        res.status(500).json({ msg: "Error en el servidor" });
+    }
+};
+
+
+
 // ✅ Login de usuario (ahora devuelve la foto y datos)
 const login = async (req, res) => {
     const { email, password } = req.body;
@@ -107,4 +147,4 @@ const login = async (req, res) => {
     }
 };
 
-module.exports = { register, login };
+module.exports = { register, login, updateUserProfile };
