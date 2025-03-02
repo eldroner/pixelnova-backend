@@ -19,6 +19,7 @@ const PORT = process.env.PORT || 5000;
 const API_URL = process.env.API_URL;
 
 // ✅ Verificación de variables de entorno en logs
+console.log("✅ Variables de entorno cargadas:", process.env);
 console.log(`🔍 MONGO_URI: ${MONGO_URI ? '✅ Definida' : '❌ No encontrada'}`);
 console.log(`🔍 JWT_SECRET: ${JWT_SECRET ? '✅ Definida' : '❌ No encontrada'}`);
 console.log(`🔍 AEMET_API_KEY: ${AEMET_API_KEY ? '✅ Definida' : '❌ No encontrada'}`);
