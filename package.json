@@ -4,9 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "NODE_ENV=production node server.js",
-    "postinstall": "npm install --omit=dev",
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "start": "NODE_ENV=production node server.js",
+  "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
