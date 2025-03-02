@@ -1,3 +1,10 @@
+require('dotenv').config();
+console.log('🔍 MONGO_URI:', process.env.MONGO_URI ? '✅ Definida' : '❌ No encontrada');
+console.log('🔍 JWT_SECRET:', process.env.JWT_SECRET ? '✅ Definida' : '❌ No encontrada');
+console.log('🔍 AEMET_API_KEY:', process.env.AEMET_API_KEY ? '✅ Definida' : '❌ No encontrada');
+console.log('🔍 PORT:', process.env.PORT || '5000 (por defecto)');
+console.log('🔍 API_URL:', process.env.API_URL || '❌ No definida');
+
 const express = require('express');
 const User = require("./models/userModel");
 const mongoose = require("mongoose");

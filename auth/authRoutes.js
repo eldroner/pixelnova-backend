@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const { register, login, updateUserProfile } = require("./authController");
 const multer = require("multer");
@@ -7,6 +8,8 @@ const Memorial = require("../models/memorialModel"); // Modelo de Memorial
 const User = require("../models/userModel");
 
 const router = express.Router();
+
+const baseUrl = process.env.API_URL || "http://localhost:5000";
 
 // ✅ Configuración de Multer para la subida de fotos de usuario
 const storage = multer.diskStorage({
@@ -122,7 +125,7 @@ router.get("/user/profile", authMiddleware, async (req, res) => {
 
         res.status(200).json({
             ...user.toObject(),
-            photo: user.photo ? `http://localhost:5000/uploads/${user.photo}` : null
+            photo: user.photo ? `${baseUrl}/uploads/${user.photo}` : null
         });
     } catch (error) {
         console.error("❌ Error al obtener el perfil del usuario:", error);
@@ -161,7 +164,7 @@ router.put("/user/profile", authMiddleware, upload.single("photo"), async (req, 
                 name: user.name,
                 email: user.email,
                 phone: user.phone,
-                photo: user.photo ? `http://localhost:5000/uploads/${user.photo}` : null
+                photo: user.photo ? `${baseUrl}/uploads/${user.photo}` : null
             }
         });
     } catch (error) {

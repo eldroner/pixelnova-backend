@@ -4,6 +4,8 @@ const jwt = require("jsonwebtoken");
 const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
+const baseUrl = process.env.API_URL || "http://localhost:5000";
+
 
 // ✅ Asegurar que la carpeta de uploads existe
 const UPLOADS_DIR = path.join(__dirname, "../uploads");
@@ -61,7 +63,8 @@ const register = async (req, res) => {
                 name: user.name,
                 email: user.email,
                 phone: user.phone,
-                photo: photoFilename ? `http://localhost:5000/uploads/${photoFilename}` : null
+                photo: photoFilename ? `${baseUrl}/uploads/${photoFilename}` : null
+
             }
         });
     } catch (error) {
@@ -99,7 +102,7 @@ const updateUserProfile = async (req, res) => {
                 name: user.name,
                 email: user.email,
                 phone: user.phone,
-                photo: user.photo ? `http://localhost:5000/uploads/${user.photo}` : null
+                photo: user.photo ? `${baseUrl}/uploads/${user.photo}` : null
             }
         });
     } catch (error) {
@@ -126,7 +129,7 @@ const login = async (req, res) => {
 
         // ✅ Evita duplicar la URL de la foto
         const photoUrl = user.photo
-            ? `http://localhost:5000/uploads/${user.photo}` 
+            ? `${baseUrl}/uploads/${user.photo}`  
             : null;
 
         console.log(`🟢 Usuario ${user.email} ha iniciado sesión. Foto: ${photoUrl}`);
