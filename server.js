@@ -1,47 +1,49 @@
-require('dotenv').config();
-console.log('🔍 MONGO_URI:', process.env.MONGO_URI ? '✅ Definida' : '❌ No encontrada');
-console.log('🔍 JWT_SECRET:', process.env.JWT_SECRET ? '✅ Definida' : '❌ No encontrada');
-console.log('🔍 AEMET_API_KEY:', process.env.AEMET_API_KEY ? '✅ Definida' : '❌ No encontrada');
-console.log('🔍 PORT:', process.env.PORT || '5000 (por defecto)');
-console.log('🔍 API_URL:', process.env.API_URL || '❌ No definida');
-
+// 📌 Importación de dependencias
 const express = require('express');
-const User = require("./models/userModel");
 const mongoose = require("mongoose");
-const dotenv = require("dotenv");
 const cors = require("cors");
 const path = require("path");
-const authRoutes = require("./auth/authRoutes"); // ✅ Importa las rutas de autenticación
-const memorialRoutes = require("./routes/memorialRoutes"); // ✅ Nueva ruta de memorials
 const axios = require('axios');
 const iconv = require('iconv-lite');
-const connectDB = require('./db');
-const authMiddleware = require("./middleware/authMiddleware"); // ✅ Importa el middleware de autenticación
 
-dotenv.config(); // ✅ Cargar variables de entorno
-connectDB(); // ✅ Conectar a MongoDB
+const authRoutes = require("./auth/authRoutes"); // ✅ Rutas de autenticación
+const memorialRoutes = require("./routes/memorialRoutes"); // ✅ Rutas de memoriales
+const connectDB = require('./db'); // ✅ Conexión a MongoDB
+const authMiddleware = require("./middleware/authMiddleware"); // ✅ Middleware de autenticación
 
-const app = express(); // ✅ Ahora la app está declarada antes de usar app.use()
+// 📌 Variables de entorno desde Railway
+const MONGO_URI = process.env.MONGO_URI;
+const JWT_SECRET = process.env.JWT_SECRET;
+const AEMET_API_KEY = process.env.AEMET_API_KEY;
 const PORT = process.env.PORT || 5000;
+const API_URL = process.env.API_URL;
+
+// ✅ Verificación de variables de entorno en logs
+console.log(`🔍 MONGO_URI: ${MONGO_URI ? '✅ Definida' : '❌ No encontrada'}`);
+console.log(`🔍 JWT_SECRET: ${JWT_SECRET ? '✅ Definida' : '❌ No encontrada'}`);
+console.log(`🔍 AEMET_API_KEY: ${AEMET_API_KEY ? '✅ Definida' : '❌ No encontrada'}`);
+console.log(`🔍 PORT: ${PORT}`);
+console.log(`🔍 API_URL: ${API_URL || '❌ No definida'}`);
+
+// 📌 Conectar a la base de datos
+connectDB();
+
+// 📌 Inicializar Express
+const app = express();
 
 // ✅ Middleware
 app.use(cors());
-app.use(express.json()); 
-app.use(express.urlencoded({ extended: true })); // ✅ Necesario para form-data
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// ✅ Hacer pública la carpeta de uploads para servir imágenes correctamente
+// ✅ Servir archivos estáticos
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// ✅ Cargar rutas de autenticación
+// ✅ Registrar rutas
 app.use("/api/auth", authRoutes);
+app.use("/api/memorials", memorialRoutes);
 
-
-
-// ✅ Cargar rutas de memorials (ahora después de definir `app`)
-app.use("/api/memorials", memorialRoutes); 
-
-// ✅ Configuración de AEMET
-const AEMET_API_KEY = process.env.AEMET_API_KEY;
+// 📌 Configuración de AEMET
 const MUNICIPIOS_URL = `https://opendata.aemet.es/opendata/api/maestro/municipios?api_key=${AEMET_API_KEY}`;
 let municipiosCache = [];
 
@@ -81,7 +83,7 @@ const fetchMunicipios = async () => {
       };
     });
 
-    console.log('✔ Municipios obtenidos correctamente:', municipiosCache);
+    console.log('✔ Municipios obtenidos correctamente.');
   } catch (error) {
     console.error('🔴 Error al obtener los municipios:', error);
   }
