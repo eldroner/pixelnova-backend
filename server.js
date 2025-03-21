@@ -93,11 +93,12 @@ const fetchMunicipios = async () => {
 };
 
 // 🔍 Ruta para buscar usuarios por nombre o email (autocomplete)
+// 🔍 Ruta para buscar usuarios por nombre o email (autocomplete)
 app.get('/api/users/search', authMiddleware, async (req, res) => {
-  const query = req.query.q;
+  const query = req.query.query || req.query.q; // ✅ Asegurar que tomamos el valor correcto
 
-  if (!query) {
-    return res.status(400).json({ msg: "Se requiere una consulta de búsqueda." });
+  if (!query || query.trim().length < 2) { // ✅ Evitar búsquedas vacías o muy cortas
+    return res.status(400).json({ msg: "Se requiere una consulta de al menos 2 caracteres." });
   }
 
   try {
@@ -106,7 +107,7 @@ app.get('/api/users/search', authMiddleware, async (req, res) => {
         { name: { $regex: query, $options: "i" } },
         { email: { $regex: query, $options: "i" } }
       ]
-    }).limit(10).select('id name email photo'); // devolvemos solo algunos campos
+    }).limit(10).select('id name email photo'); // ✅ Seleccionar solo los campos necesarios
 
     res.json(users);
   } catch (error) {
@@ -114,6 +115,7 @@ app.get('/api/users/search', authMiddleware, async (req, res) => {
     res.status(500).json({ msg: "Error al buscar usuarios" });
   }
 });
+
 
 
 // 📌 Ruta para obtener municipios
