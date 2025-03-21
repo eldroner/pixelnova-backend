@@ -1,3 +1,4 @@
+const mongoose = require("mongoose"); 
 const express = require("express");
 const authMiddleware = require("../middleware/authMiddleware");
 const Memorial = require("../models/memorialModel");
@@ -95,5 +96,75 @@ router.post("/create", authMiddleware, async (req, res) => {
         res.status(500).json({ msg: "Error en el servidor" });
     }
 });
+
+// 📌 Ruta para asignar un memorial a otro usuario
+router.post("/assign", authMiddleware, async (req, res) => {
+    try {
+        const { memorialId, userId } = req.body;
+
+        if (!memorialId || !userId) {
+            return res.status(400).json({ msg: "Memorial ID y User ID son obligatorios." });
+        }
+
+        // ✅ Verificamos que ambos IDs sean válidos
+        if (!mongoose.Types.ObjectId.isValid(memorialId) || !mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ msg: "Formato de ID inválido." });
+        }
+
+        // 🔍 Verificar si el memorial existe
+        const memorial = await Memorial.findById(memorialId);
+        if (!memorial) {
+            return res.status(404).json({ msg: "Memorial no encontrado." });
+        }
+        
+
+        // 🔍 Verificar si el usuario existe
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ msg: "Usuario no encontrado." });
+        }
+
+        // 📝 Asignar el memorial al nuevo usuario
+        memorial.owner = userId;
+        await memorial.save();
+
+        // 🔄 Agregar el memorial a la lista del usuario
+        await User.findByIdAndUpdate(userId, {
+            $addToSet: { memorials: memorial._id } // addToSet evita duplicados
+        });
+
+        res.json({ msg: "✅ Memorial asignado con éxito.", memorial });
+    } catch (error) {
+        console.error("❌ Error al asignar memorial:", error);
+        res.status(500).json({ msg: "Error en el servidor." });
+    }
+});
+
+// 🔍 Ruta para buscar usuarios por nombre o email
+// 📌 Buscar usuarios por nombre o email
+router.get("/search", authMiddleware, async (req, res) => {
+    const searchQuery = req.query.query;
+  
+    if (!searchQuery || searchQuery.trim() === '') {
+      return res.status(400).json({ msg: "Se requiere una consulta de búsqueda." });
+    }
+  
+    try {
+      const regex = new RegExp(searchQuery, 'i'); // Búsqueda insensible a mayúsculas/minúsculas
+  
+      const users = await User.find({
+        $or: [
+          { name: regex },
+          { email: regex }
+        ]
+      }).select("id name email photo"); // Solo los campos necesarios
+  
+      res.status(200).json(users);
+    } catch (error) {
+      console.error("❌ Error al buscar usuarios:", error);
+      res.status(500).json({ msg: "Error en el servidor." });
+    }
+  });
+  
 
 module.exports = router;

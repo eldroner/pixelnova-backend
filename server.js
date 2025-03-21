@@ -5,6 +5,8 @@ const cors = require("cors");
 const path = require("path");
 const axios = require('axios');
 const iconv = require('iconv-lite');
+const User = require("./models/userModel");
+
 
 const authRoutes = require("./auth/authRoutes"); // ✅ Rutas de autenticación
 const memorialRoutes = require("./routes/memorialRoutes"); // ✅ Rutas de memoriales
@@ -89,6 +91,30 @@ const fetchMunicipios = async () => {
     console.error('🔴 Error al obtener los municipios:', error);
   }
 };
+
+// 🔍 Ruta para buscar usuarios por nombre o email (autocomplete)
+app.get('/api/users/search', authMiddleware, async (req, res) => {
+  const query = req.query.q;
+
+  if (!query) {
+    return res.status(400).json({ msg: "Se requiere una consulta de búsqueda." });
+  }
+
+  try {
+    const users = await User.find({
+      $or: [
+        { name: { $regex: query, $options: "i" } },
+        { email: { $regex: query, $options: "i" } }
+      ]
+    }).limit(10).select('id name email photo'); // devolvemos solo algunos campos
+
+    res.json(users);
+  } catch (error) {
+    console.error("❌ Error al buscar usuarios:", error);
+    res.status(500).json({ msg: "Error al buscar usuarios" });
+  }
+});
+
 
 // 📌 Ruta para obtener municipios
 app.get('/api/municipios', async (req, res) => {
