@@ -35,7 +35,22 @@ connectDB();
 const app = express();
 
 // ✅ Middleware
-app.use(cors());
+const allowedOrigins = [
+  'https://pixelnova.es',
+  'https://www.pixelnova.es',
+  'https://pixelnova-backend.onrender.com'
+];
+
+app.use(cors({
+  origin: function(origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -91,6 +106,20 @@ const fetchMunicipios = async () => {
     console.error('🔴 Error al obtener los municipios:', error);
   }
 };
+
+  app.get('/', (req, res) => {
+    res.json({
+      status: 'running',
+      service: 'PixelNova Backend',
+      version: '1.0',
+      endpoints: {
+        auth: '/api/auth',
+        memorials: '/api/memorials',
+        municipios: '/api/municipios',
+        weather: '/api/weather/:municipio'
+      }
+    });
+  });
 
 // 🔍 Ruta para buscar usuarios por nombre o email (autocomplete)
 // 🔍 Ruta para buscar usuarios por nombre o email (autocomplete)
@@ -154,8 +183,19 @@ app.get('/api/weather/:municipio', async (req, res) => {
   }
 });
 
-// 📌 Iniciar el servidor y cargar municipios
-app.listen(PORT, async () => {
-  console.log(`🟢 Servidor backend corriendo en http://localhost:${PORT}`);
-  await fetchMunicipios();
+// Manejo de errores 404
+app.use((req, res, next) => {
+  res.status(404).json({ error: 'Endpoint no encontrado' });
 });
+
+// Manejador de errores global
+app.use((err, req, res, next) => {
+  console.error('🔴 Error:', err.stack);
+  res.status(500).json({ error: 'Algo salió mal en el servidor' });
+});
+
+// 📌 Iniciar el servidor y cargar municipios
+app.listen(PORT, '0.0.0.0', async () => {
+  console.log(`🟢 Servidor backend corriendo en el puerto ${PORT}`);
+  await fetchMunicipios();
+});;
