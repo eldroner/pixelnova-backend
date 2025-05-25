@@ -35,10 +35,7 @@ connectDB();
 const app = express();
 
 // ✅ Middleware
-app.use(cors({
-  origin: 'https://pixelnova.es'
-  //credentials: true // Si usas cookies/tokens
-}));
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -122,7 +119,7 @@ app.get('/api/users/search', authMiddleware, async (req, res) => {
 
 
 // 📌 Ruta para obtener municipios
-app.get('/api/municipios', authMiddleware, async (req, res) => {
+app.get('/api/municipios', async (req, res) => {
   if (municipiosCache.length === 0) {
     await fetchMunicipios();
   }
