@@ -1,4 +1,7 @@
 // 📌 Importación de dependencias
+const { sendContactEmail } = require('./src/controllers/email.controller');
+const { uploadImage } = require('./src/controllers/upload.controller'); // Importar el nuevo controlador de upload
+
 const express = require('express');
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -8,6 +11,8 @@ const https = require('https'); // ✅ Para keepAlive
 const axios = require('axios');
 const iconv = require('iconv-lite');
 const User = require("./models/userModel");
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() });
 
 const authRoutes = require("./auth/authRoutes");
 const memorialRoutes = require("./routes/memorialRoutes");
@@ -53,7 +58,10 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // ✅ Registrar rutas
 app.use("/api/auth", authRoutes);
 app.use("/api/memorials", memorialRoutes);
-app.use("/api/youtube", youtubeRoutes);
+app.post('/api/auth/upload', upload.single('image'), uploadImage);
+
+// Ruta para enviar email de contacto
+app.post('/api/email/send-contact', sendContactEmail);
 
 // 📌 Configuración de AEMET
 const MUNICIPIOS_URL = `https://opendata.aemet.es/opendata/api/maestro/municipios?api_key=${AEMET_API_KEY}`;
