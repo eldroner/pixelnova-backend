@@ -23,16 +23,51 @@ exports.sendContactEmail = async (formData) => {
     throw new Error('SMTP configuration missing.');
   }
 
+  const emailContent = `
+  <div style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
+    <div style="max-width: 600px; margin: auto; background-color: #ffffff; border-top: 5px solid #8B1C20; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+      
+      <div style="padding: 30px 30px 20px 30px; text-align: center;">
+        <a href="https://pixelnova.es/" target="_blank" rel="noopener">
+          <img src="https://raw.githubusercontent.com/eldroner/mis-assets/main/pixelnova-logo-gris-rojo-sin-fondo.png" alt="Logo Pixelnova" style="max-height: 45px; opacity: 0.9;">
+        </a>
+      </div>
+
+      <div style="padding: 0 30px 30px 30px;">
+        <h2 style="color: #8B1C20; text-align: center; font-size: 24px; margin-bottom: 20px;">Nuevo Mensaje de Contacto</h2>
+        
+        <p style="color: #555555; line-height: 1.6;">Has recibido un nuevo mensaje a través del formulario de contacto de pixelnova.es.</p>
+        
+        <div style="border-top: 1px solid #eeeeee; margin: 20px 0;"></div>
+
+        <p style="color: #333333;"><strong>Detalles del mensaje:</strong></p>
+        <ul style="list-style-type: none; padding-left: 0; color: #555555;">
+          <li style="padding-bottom: 12px;"><strong>Nombre:</strong> ${formData.name}</li>
+          <li style="padding-bottom: 12px;"><strong>Email:</strong> <a href="mailto:${formData.email}" style="color: #CF0D0E; text-decoration: none;">${formData.email}</a></li>
+          <li style="padding-bottom: 12px;"><strong>Asunto:</strong> ${formData.subject}</li>
+          <li style="padding-bottom: 0;"><strong>Mensaje:</strong><br><div style="padding: 15px; margin-top: 5px; background-color: #f9f9f9; border-left: 3px solid #BE5B5D; color: #333333;">${formData.message.replace(/\n/g, '<br>')}</div></li>
+        </ul>
+
+        <div style="border-top: 1px solid #eeeeee; margin: 30px 0;"></div>
+
+        <p style="font-size: 11px; color: #888888; text-align: center; line-height: 1.5;">
+          Este mensaje ha sido enviado por Pixelnova Digital Services.<br>
+          Dirección: Calle de Andalucía 9 · Email: <a href="mailto:info@pixelnova.es" style="color: #888888;">info@pixelnova.es</a> · 
+          Tel: <a href="https://wa.me/34633703882" style="color: #888888; text-decoration: none;">633703882</a><br>
+          Los datos personales serán tratados conforme al RGPD y la LOPDGDD. Más información en nuestra
+          <a href="https://pixelnova.es/privacy-policy" style="color: #BE5B5D; text-decoration: none;">política de privacidad</a>.
+        </p>
+      </div>
+
+    </div>
+  </div>
+  `;
+
   const mailOptions = {
     from: SENDER_EMAIL,
     to: 'info@pixelnova.es', // Or a configurable recipient email
     subject: `Nuevo mensaje de contacto de ${formData.name}`,
-    html: `
-      <p><strong>Nombre:</strong> ${formData.name}</p>
-      <p><strong>Email:</strong> ${formData.email}</p>
-      <p><strong>Asunto:</strong> ${formData.subject}</p>
-      <p><strong>Mensaje:</strong><br>${formData.message}</p>
-    `,
+    html: emailContent,
   };
 
   try {
