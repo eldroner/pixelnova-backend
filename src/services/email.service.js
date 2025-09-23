@@ -44,7 +44,7 @@ exports.sendContactEmail = async (formData) => {
         <ul style="list-style-type: none; padding-left: 0; color: #555555;">
           <li style="padding-bottom: 12px;"><strong>Nombre:</strong> ${formData.name}</li>
           <li style="padding-bottom: 12px;"><strong>Email:</strong> <a href="mailto:${formData.email}" style="color: #CF0D0E; text-decoration: none;">${formData.email}</a></li>
-          <li style="padding-bottom: 12px;"><strong>Asunto:</strong> ${formData.subject}</li>
+          ${formData.phone ? `<li style="padding-bottom: 12px;"><strong>Teléfono:</strong> ${formData.phone}</li>` : ''}
           <li style="padding-bottom: 0;"><strong>Mensaje:</strong><br><div style="padding: 15px; margin-top: 5px; background-color: #f9f9f9; border-left: 3px solid #BE5B5D; color: #333333;">${formData.message.replace(/\n/g, '<br>')}</div></li>
         </ul>
 
