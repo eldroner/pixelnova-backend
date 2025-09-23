@@ -23,6 +23,14 @@ exports.sendContactEmail = async (formData) => {
     throw new Error('SMTP configuration missing.');
   }
 
+  // Determine sender name based on the form source
+  let fromName = 'Pixelnova';
+  if (formData.source === 'consulta') {
+    fromName = 'Pixelnova (consulta)';
+  } else if (formData.source === 'SEO') {
+    fromName = 'Pixelnova (SEO)';
+  }
+
   const emailContent = `
   <div style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
     <div style="max-width: 600px; margin: auto; background-color: #ffffff; border-top: 5px solid #8B1C20; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
@@ -64,7 +72,7 @@ exports.sendContactEmail = async (formData) => {
   `;
 
   const mailOptions = {
-    from: SENDER_EMAIL,
+    from: `"${fromName}" <${SENDER_EMAIL}>`,
     to: 'info@pixelnova.es', // Or a configurable recipient email
     subject: `Nuevo mensaje de contacto de ${formData.name}`,
     html: emailContent,
